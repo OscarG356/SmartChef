@@ -22,39 +22,47 @@ SmartChef es un asistente de cocina especializado en la preparación de masas bl
 ## ✅ Requisitos Funcionales
 
 ### 1. Procesamiento de Datos
+
 - El sistema deberá recibir como entradas la receta seleccionada y el número de comensales para calcular automáticamente las cantidades requeridas de cada ingrediente.
 - Consultar la información donde están las recetas predefinidas y sus proporciones estándar.
 - Ajustar dinámicamente las cantidades de ingredientes.
 
 ### 2. Comunicación
+
 - Comunicación bidireccional entre LabVIEW y el microcontrolador.
 - Envío de comandos desde la interfaz y recepción de datos de sensores.
 - Notificación al usuario en caso de pérdida de comunicación y detención segura.
 
 ### 3. Control de Actuadores y Sensores
+
 - Activación del motor DC según la receta.
 - Monitoreo del sensor de presión en tiempo real.
 - Indicación visual del pesaje correcto.
 - Temporizador de reposo automático si la receta lo requiere.
 
 ### 4. Gestión de Energía
+
 - Operación en modo de bajo consumo durante estado de espera/reposo.
 
 ### 5. Interfaz de Usuario
+
 - Menú de selección de recetas al iniciar.
 - Ingreso del número de comensales.
 - Estado del proceso en tiempo real.
 - Indicador claro cuando la masa esté lista.
 
 ### 6. Seguridad y Manejo de Errores
+
 - Detección de errores en sensores o motor, con notificación.
 - Botón o comando de emergencia para detener el proceso.
 
 ### 7. Tiempos de Respuesta
+
 - Lectura del sensor de presión en < 500 ms.
 - Activación/parada del motor en < 2 segundos tras el comando.
 
 ### 8. Cumplimiento de Secuencia
+
 - Ejecución secuencial obligatoria: receta → pesaje → mezcla → reposo.
 
 ## 🧠 Requisitos No Funcionales
