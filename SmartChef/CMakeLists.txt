@@ -28,13 +28,6 @@ set(PICO_BOARD pico CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-# Set the path to pico-extras using an absolute path
-# NOTE: This path is specific to your machine.
-set(PICO_EXTRAS_PATH "C:/Users/oscar/pico/pico-extras")
-
-# We also need PICO EXTRAS
-include(${PICO_EXTRAS_PATH}/external/pico_extras_import.cmake)
-
 project(SmartChef2.0 C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
@@ -49,9 +42,7 @@ add_executable(SmartChef2.0
     src/sensors/load_cell.c
     src/sensors/current_sensor.c
     src/sensors/ultrasonic.c
-    src/drivers/external_flash.c
     src/utils/smart_timers.c
-    src/utils/power_management.c
     src/smart_blender.c
     )
 
@@ -65,6 +56,7 @@ pico_enable_stdio_usb(SmartChef2.0 1)
 # Add the standard library to the build
 target_link_libraries(SmartChef2.0
     pico_stdlib
+    pico_stdlib
     pico_time
     hardware_timer
     hardware_spi
@@ -72,11 +64,11 @@ target_link_libraries(SmartChef2.0
     hardware_adc
     hardware_clocks
     hardware_xosc
-    hardware_rosc
     hardware_pll
+    hardware_gpio
+    hardware_irq
     hardware_pwm
-    hardware_sleep
-
+    hardware_i2c
 )
 
 # Add the standard include files to the build
