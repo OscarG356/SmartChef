@@ -28,15 +28,15 @@ set(PICO_BOARD pico CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(SmartChef2.0 C CXX ASM)
+project(SmartChef C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(SmartChef2.0 
-    SmartChef2.0.c 
+add_executable(SmartChef 
+    SmartChef.c 
     src/sensors/limit_switch.c
     src/sensors/encoder.c
     src/sensors/load_cell.c
@@ -44,17 +44,18 @@ add_executable(SmartChef2.0
     src/sensors/ultrasonic.c
     src/utils/smart_timers.c
     src/smart_blender.c
+    src/drivers/flash_i2c.c
     )
 
-pico_set_program_name(SmartChef2.0 "SmartChef2.0")
-pico_set_program_version(SmartChef2.0 "0.1")
+pico_set_program_name(SmartChef "SmartChef")
+pico_set_program_version(SmartChef "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(SmartChef2.0 0)
-pico_enable_stdio_usb(SmartChef2.0 1)
+pico_enable_stdio_uart(SmartChef 0)
+pico_enable_stdio_usb(SmartChef 1)
 
 # Add the standard library to the build
-target_link_libraries(SmartChef2.0
+target_link_libraries(SmartChef
     pico_stdlib
     pico_stdlib
     pico_time
@@ -72,12 +73,12 @@ target_link_libraries(SmartChef2.0
 )
 
 # Add the standard include files to the build
-target_include_directories(SmartChef2.0 PRIVATE
+target_include_directories(SmartChef PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/sensors
 )
 
-pico_add_extra_outputs(SmartChef2.0)
+pico_add_extra_outputs(SmartChef)
 
