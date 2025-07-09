@@ -1,44 +1,46 @@
 #include "ultrasonic.h"
-#include "hardware/gpio.h"
-#include "pico/time.h"
 
-// Función interna para enviar el pulso de disparo
-static void send_trigger_pulse(uint8_t trig_pin) {
-    gpio_put(trig_pin, 1);
-    sleep_us(10);
-    gpio_put(trig_pin, 0);
-}
+#define TIMEOUT_US 30000  // 30 ms timeout
 
-// Función interna para medir la duración del pulso de eco
-static uint32_t measure_pulse_duration(uint8_t echo_pin) {
-    // Espera a que el pin de eco se ponga en alto
-    while (gpio_get(echo_pin) == 0) {
-        tight_loop_contents();
-    }
-    uint64_t start = time_us_64();
-
-    // Espera a que el pin de eco se ponga en bajo
-    while (gpio_get(echo_pin) == 1) {
-        tight_loop_contents();
-    }
-    uint64_t end = time_us_64();
-
-    return (uint32_t)(end - start);
-}
-
-void ultrasonic_init(uint8_t trig_pin, uint8_t echo_pin) {
+void ultrasonic_init(uint trig_pin, uint echo_pin) {
     gpio_init(trig_pin);
     gpio_set_dir(trig_pin, GPIO_OUT);
     gpio_put(trig_pin, 0);
 
     gpio_init(echo_pin);
     gpio_set_dir(echo_pin, GPIO_IN);
+    gpio_pull_down(echo_pin);  // Pull down to ensure a clean start
 }
 
-float ultrasonic_get_distance_cm(uint8_t trig_pin, uint8_t echo_pin) {
-    send_trigger_pulse(trig_pin);
-    uint32_t pulse_width = measure_pulse_duration(echo_pin);
+float ultrasonic_get_distance_cm(uint trig_pin, uint echo_pin) {
+    // Pulso de 10 us en TRIG
+    gpio_put(trig_pin, 1);
+    sleep_us(10);
+    gpio_put(trig_pin, 0);
+
+    // Esperar subida de ECHO (inicio del pulso)
+    uint64_t t0 = time_us_64();
+    while (gpio_get(echo_pin) == 0) {
+        if ((time_us_64() - t0) > TIMEOUT_US) {
+            return -1.0f;
+        }
     
-    // La distancia en cm es la duración del pulso en µs / 58
-    return (float)pulse_width / 58.0f;
+    }
+
+    uint64_t pulse_start = time_us_64();
+
+    // Esperar bajada de ECHO (fin del pulso)
+    while (gpio_get(echo_pin) == 1) {
+        if ((time_us_64() - pulse_start) > TIMEOUT_US) {
+            return -1.0f;
+        }
+        
+    }
+
+    uint64_t pulse_end = time_us_64();
+
+    // Duración del pulso
+    uint32_t duration = (uint32_t)(pulse_end - pulse_start);
+    return duration / 58.0f;
+    
 }

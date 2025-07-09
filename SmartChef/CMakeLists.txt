@@ -44,7 +44,8 @@ add_executable(SmartChef
     src/sensors/ultrasonic.c
     src/utils/smart_timers.c
     src/smart_blender.c
-    src/drivers/flash_i2c.c
+    src/drivers/recetas.c
+    src/drivers/batido_control.c
     )
 
 pico_set_program_name(SmartChef "SmartChef")

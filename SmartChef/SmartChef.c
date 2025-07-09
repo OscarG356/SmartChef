@@ -1,56 +1,69 @@
 #include <stdio.h>
+#include <string.h>
 #include "pico/stdlib.h"
-#include "pico/binary_info.h"
-#include "hardware/i2c.h"
-#include "hardware/gpio.h"
+#include "recetas.h"
+#include "batido_control.h"
 
-bool reserved_addr(uint8_t addr) {
-    return (addr & 0x78) == 0 || (addr & 0x78) == 0x78;
-}
+#define BUFFER_LEN 64
 
 int main() {
-    // Enable UART so we can print status output
     stdio_init_all();
+    while (!stdio_usb_connected()) {
+        sleep_ms(100);
+    }
 
-    // Configure the LED pin (GPIO 25) as output
-    const uint LED_PIN = 25;
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, GPIO_OUT);
+    printf("\n🧪 Test Librería Batido Iniciado\n");
 
-    // Turn on the LED
-    gpio_put(LED_PIN, 1);
+    char buffer[BUFFER_LEN];
+    int paso = 0;
 
-#if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
-#warning i2c/bus_scan example requires a board with I2C pins
-    puts("Default I2C pins were not defined");
-#else
-    i2c_init(i2c_default, 100 * 1000);
-    gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
-    gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
-    gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
-    bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
+    while (true) {
+        batido_procesar();
 
-    printf("\nI2C Bus Scan\n");
-    printf("   0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n");
-
-    for (int addr = 0; addr < (1 << 7); ++addr) {
-        if (addr % 16 == 0) {
-            printf("%02x ", addr);
+        if (batido_esta_ocupado()) {
+            sleep_ms(100);
+            continue;
         }
 
-        int ret;
-        uint8_t rxdata;
-        if (reserved_addr(addr))
-            ret = PICO_ERROR_GENERIC;
-        else
-            ret = i2c_read_blocking(i2c_default, addr, &rxdata, 1, false);
+        printf("\n📥 Ingresa el nombre de la receta o 'r' para avanzar paso a paso:\n");
 
-        printf(ret < 0 ? "." : "@");
-        printf(addr % 16 == 15 ? "\n" : "  ");
+        // Leer línea bloqueante por getchar
+        int idx = 0;
+        char c;
+        while (1) {
+            c = getchar();
+            if (c == '\n' || c == '\r') break;
+            if (idx < BUFFER_LEN - 1) {
+                buffer[idx++] = c;
+            }
+        }
+        buffer[idx] = '\0';
+
+        if (strcmp(buffer, "r") == 0) {
+            if (paso < total_ingredientes()) {
+                const char* ing;
+                float cant;
+                ing = obtener_ingrediente(paso, &cant);
+                printf("🧂 %s: %.2f g\n", ing, cant);
+                paso++;
+            } else if (!batido_esta_ocupado() && paso == total_ingredientes()) {
+                int tiempo_batido = get_tiempo_batido();
+                int pwm_batido = get_pwm_batido();
+                printf("🌀 Iniciando batido: %ds @ PWM %d\n", tiempo_batido, pwm_batido);
+                batido_iniciar(tiempo_batido, pwm_batido);
+                paso++; // Para evitar múltiples arranques
+            } else {
+                printf("✅ Ingredientes y batido completados\n");
+            }
+        } else if (strlen(buffer) > 0) {
+            if (cargar_receta(buffer)) {
+                printf("✅ Receta '%s' cargada\n", buffer);
+                paso = 0;
+            } else {
+                printf("❌ Receta no encontrada\n");
+            }
+        }
     }
-    printf("Done.\n");
-#endif
 
     return 0;
 }
