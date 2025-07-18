@@ -25,7 +25,6 @@ uint pwm_init_servo(uint gpio) {
 }
 
 void mover_servo(uint gpio, uint slice, float angulo) {
-    printf("🌀 moviendo servo GPIO %u → %.1f°\n", gpio, angulo);
     float pulso_ms = 0.5f + (angulo / 180.0f) * 2.0f;  // entre 0.5 ms y 2.5 ms
     uint ciclos = (uint)(pulso_ms * 1953);             // convertir a ciclos
     pwm_set_chan_level(slice, pwm_gpio_to_channel(gpio), ciclos);
@@ -53,24 +52,16 @@ void init_tapa_y_servos(uint sensor1_gpio, uint sensor2_gpio, uint servo1_gpio, 
 
 // === Lógica de verificación de tapa ===
 void verificar_tapa_y_mover_servos(void) {
-    bool s1 = !gpio_get(sensor1_pin); // LOW = presionado
+    bool s1 = !gpio_get(sensor1_pin);
     bool s2 = !gpio_get(sensor2_pin);
 
-    printf("🔍 Sensor 1: %s | Sensor 2: %s\n",
-           s1 ? "PRESIONADO" : "LIBRE",
-           s2 ? "PRESIONADO" : "LIBRE");
-
     if (s1 && s2 && !tapa_cerrada) {
-        printf("✅ Ambos sensores presionados: Tapa cerrada\n");
         mover_servo(servo1_pin, slice_servo1, 0.0f);
         mover_servo(servo2_pin, slice_servo2, 180.0f);
-        printf("🔧 Servos: SERVO1 → 180°, SERVO2 → 0°\n");
         tapa_cerrada = true;
     } else if ((!s1 || !s2) && tapa_cerrada) {
-        printf("❌ Uno o ambos sensores liberados: Tapa abierta\n");
         mover_servo(servo1_pin, slice_servo1, 180.0f);
         mover_servo(servo2_pin, slice_servo2, 0.0f);
-        printf("🔧 Servos: SERVO1 → 0°, SERVO2 → 180°\n");
         tapa_cerrada = false;
     }
 }

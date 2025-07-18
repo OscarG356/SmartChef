@@ -55,8 +55,6 @@ float leer_peso_gramos(void) {
     float peso = (((lectura_cruda - OFFSET_MANUAL) / FACTOR_ESCALA)-475);
 
     if (peso < 0.0f) peso = 0.0f;
-    printf("⚖️Peso: %.1f g\n", peso);
-    
     hx711_sleep();
     sleep_ms(3000);  // Simula ciclo de bajo consumo
     hx711_wake();

@@ -38,7 +38,6 @@ pico_sdk_init()
 add_executable(SmartChef 
     SmartChef.c 
     src/sensors/limit_switch.c
-    src/sensors/encoder.c
     src/sensors/load_cell.c
     src/sensors/current_sensor.c
     src/sensors/ultrasonic.c

@@ -6,11 +6,9 @@
 #include "batido_control.h"
 #include "current_sensor.h"
 #include "ultrasonic.h"
-#include "encoder.h"
 #include "pico/stdlib.h"
 #include "hardware/sync.h"
 #include "boton_reset.h"
-// #include "pico/timeout_helper.h" // opcional según entorno
 
 typedef enum {
     ESTADO_CARGAR_RECETA,
@@ -107,8 +105,7 @@ static void estado_batido(uint trig_pin, uint echo_pin) {
             if (tiempo_transcurrido < receta_actual.tiempo_batido * 10000000) {
                 float corriente = current_sensor_get_current();
                 float nivel = ultrasonic_get_distance_cm(trig_pin, echo_pin);
-                float rpm = leer_rpm_filtrada();
-                printf("🔁 Corriente: %.2f A, Nivel: %.1f cm, RPM: %.1f\n", corriente, nivel, rpm);
+                printf("🔁 Corriente: %.2f A, Nivel: %.1f cm\n", corriente, nivel);
             }
             estado_actual = ESTADO_REPOSO;
          

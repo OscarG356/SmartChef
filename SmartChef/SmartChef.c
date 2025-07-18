@@ -4,7 +4,6 @@
 #include "ultrasonic.h"
 #include "limit_switch.h"
 #include "load_cell.h"
-#include "encoder.h"
 #include "current_sensor.h"
 #include "boton_reset.h"
 
@@ -25,8 +24,6 @@ int main() {
         sleep_ms(100);
     }
 
-    printf("\n🔌 Sistema SmartBlender iniciado\n");
-
     // === Inicializaciones de hardware ===
     current_sensor_init();
     ultrasonic_init(TRIG_PIN, ECHO_PIN);
@@ -37,7 +34,6 @@ int main() {
 
     
    hx711_init();
-    encoder_init();
     boton_init(15); // Inicializar botón de reset en GPIO 15
     
 
