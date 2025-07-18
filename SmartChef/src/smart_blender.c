@@ -93,7 +93,7 @@ static void estado_pesar_ingredientes() {
 static void estado_batido(uint trig_pin, uint echo_pin) {
     printf("🌀 Iniciando batido...\n");
     absolute_time_t inicio_batido = get_absolute_time();
-    batido_iniciar(receta_actual.tiempo_batido, receta_actual.pwm_batido);
+    iniciar_pwm_motor(receta_actual.pwm_batido);
 
     while (true) {
         verificar_tapa_y_mover_servos();
@@ -111,8 +111,7 @@ static void estado_batido(uint trig_pin, uint echo_pin) {
                 printf("🔁 Corriente: %.2f A, Nivel: %.1f cm, RPM: %.1f\n", corriente, nivel, rpm);
             }
             estado_actual = ESTADO_REPOSO;
-            deneter_pwm_motor();
-            printf("🏁 Batido finalizado. Iniciando reposo...\n");
+         
         } else {
             printf("⚠️ Tapa abierta. Abortando batido...\n");
             detener_pwm_motor();
@@ -164,7 +163,6 @@ static void estado_finalizado() {
 
 // --- Loop principal ---
 void blender_loop(uint trig_pin, uint echo_pin) {
-    batido_procesar();
     switch (estado_actual) {
         case ESTADO_CARGAR_RECETA:
             estado_cargar_receta();

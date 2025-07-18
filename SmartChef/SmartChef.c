@@ -1,68 +1,50 @@
 #include <stdio.h>
-#include <string.h>
 #include "pico/stdlib.h"
-#include "recetas.h"
-#include "batido_control.h"
+#include "smart_blender.h"
+#include "ultrasonic.h"
+#include "limit_switch.h"
+#include "load_cell.h"
+#include "encoder.h"
+#include "current_sensor.h"
+#include "boton_reset.h"
 
-#define BUFFER_LEN 64
+// Pines del sistema
+#define TRIG_PIN        19
+#define ECHO_PIN        18
+#define SENSOR1_GPIO    10
+#define SENSOR2_GPIO    11
+#define SERVO1_GPIO     14
+#define SERVO2_GPIO     13
+
 
 int main() {
     stdio_init_all();
+    sleep_ms(3000); // Esperar conexión USB
+
     while (!stdio_usb_connected()) {
         sleep_ms(100);
     }
 
-    printf("\n🧪 Test Librería Batido Iniciado\n");
+    printf("\n🔌 Sistema SmartBlender iniciado\n");
 
-    char buffer[BUFFER_LEN];
-    int paso = 0;
+    // === Inicializaciones de hardware ===
+    current_sensor_init();
+    ultrasonic_init(TRIG_PIN, ECHO_PIN);
 
+    uint slice1 = pwm_init_servo(SERVO1_GPIO);
+    uint slice2 = pwm_init_servo(SERVO2_GPIO);
+    init_tapa_y_servos(SENSOR1_GPIO, SENSOR2_GPIO, SERVO1_GPIO, slice1, SERVO2_GPIO, slice2);
+
+    
+   hx711_init();
+    encoder_init();
+    boton_init(15); // Inicializar botón de reset en GPIO 15
+    
+
+    // === Bucle principal ===
     while (true) {
-        batido_procesar();
-
-        if (batido_esta_ocupado()) {
-            sleep_ms(100);
-            continue;
-        }
-
-        printf("\n📥 Ingresa el nombre de la receta o 'r' para avanzar paso a paso:\n");
-
-        // Leer línea bloqueante por getchar
-        int idx = 0;
-        char c;
-        while (1) {
-            c = getchar();
-            if (c == '\n' || c == '\r') break;
-            if (idx < BUFFER_LEN - 1) {
-                buffer[idx++] = c;
-            }
-        }
-        buffer[idx] = '\0';
-
-        if (strcmp(buffer, "r") == 0) {
-            if (paso < total_ingredientes()) {
-                const char* ing;
-                float cant;
-                ing = obtener_ingrediente(paso, &cant);
-                printf("🧂 %s: %.2f g\n", ing, cant);
-                paso++;
-            } else if (!batido_esta_ocupado() && paso == total_ingredientes()) {
-                int tiempo_batido = get_tiempo_batido();
-                int pwm_batido = get_pwm_batido();
-                printf("🌀 Iniciando batido: %ds @ PWM %d\n", tiempo_batido, pwm_batido);
-                batido_iniciar(tiempo_batido, pwm_batido);
-                paso++; // Para evitar múltiples arranques
-            } else {
-                printf("✅ Ingredientes y batido completados\n");
-            }
-        } else if (strlen(buffer) > 0) {
-            if (cargar_receta(buffer)) {
-                printf("✅ Receta '%s' cargada\n", buffer);
-                paso = 0;
-            } else {
-                printf("❌ Receta no encontrada\n");
-            }
-        }
+        blender_loop(TRIG_PIN, ECHO_PIN);
+        sleep_ms(100);
     }
 
     return 0;
