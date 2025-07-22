@@ -19,10 +19,20 @@ typedef enum {
     ESTADO_FINALIZADO
 } Estado;
 
-static Estado estado_actual = ESTADO_CARGAR_RECETA;
+static Estado estado_actual = ESTADO_FINALIZADO;
 Receta receta_actual;
 int receta_id = 0;
 float peso_final = 0.0f;
+
+//******************************************
+#define LED_PIN 25
+static void inicializar_led() {
+    gpio_init(LED_PIN);
+    gpio_set_dir(LED_PIN, GPIO_OUT);
+    gpio_put(LED_PIN, true); // Enciende el LED
+}
+
+//*******************************************
 
 // --- Funciones de cada estado ---
 static void estado_cargar_receta() {
@@ -51,8 +61,10 @@ static void estado_cargar_receta() {
             buffer[idx] = '\0';
 
             if (!cargar_receta(buffer, &receta_actual)) {
+                return; // Si no se carga la receta, salimos
             }
             estado_actual = ESTADO_PESAR_INGREDIENTES;
+            inicializar_led();
 }
 
 static void estado_pesar_ingredientes() {
@@ -64,12 +76,14 @@ static void estado_pesar_ingredientes() {
 
         while (leer_peso_gramos() < cantidad) {
             float peso_actual = leer_peso_gramos();
+            float peso_diferencia = cantidad - (peso_final - peso_actual);
 
-            if (cantidad - (peso_final - peso_actual) < 5.0f) {
+            if (peso_diferencia < 5.0f) {
                 peso_final += peso_actual;
                 break;
             }
             sleep_ms(500);
+            printf("1:%s:%.2fg:%.2f", nombre, cantidad, peso_diferencia);
         }
     }
     estado_actual = ESTADO_BATIDO;
@@ -78,6 +92,7 @@ static void estado_pesar_ingredientes() {
 static void estado_batido(uint trig_pin, uint echo_pin) {
     absolute_time_t inicio_batido = get_absolute_time();
     iniciar_pwm_motor(receta_actual.pwm_batido);
+    printf(receta_actual.tiempo_batido);
 
     while (true) {
         verificar_tapa_y_mover_servos();
@@ -85,7 +100,7 @@ static void estado_batido(uint trig_pin, uint echo_pin) {
             iniciar_pwm_motor(receta_actual.pwm_batido);
             int64_t tiempo_transcurrido = absolute_time_diff_us(inicio_batido, get_absolute_time());
 
-            if (tiempo_transcurrido < receta_actual.tiempo_batido * 10000000) {
+            if (tiempo_transcurrido < receta_actual.tiempo_batido * 1000000) {
                 float corriente = current_sensor_get_current();
                 float nivel = ultrasonic_get_distance_cm(trig_pin, echo_pin);
             }
@@ -102,6 +117,8 @@ static void estado_batido(uint trig_pin, uint echo_pin) {
 static void estado_reposo(uint trig_pin, uint echo_pin) {
     absolute_time_t inicio_reposo = get_absolute_time();
     absolute_time_t fin_reposo = delayed_by_ms(inicio_reposo, receta_actual.tiempo_reposo * 1000);
+
+    printf(receta_actual.tiempo_reposo);
 
     while (absolute_time_diff_us(get_absolute_time(), fin_reposo) > 0) {
         verificar_tapa_y_mover_servos();
@@ -120,10 +137,10 @@ static void estado_finalizado() {
     boton_reset_estado();
     sleep_ms(500);
     __wfi();
-
     if (boton_fue_presionado()) {
         boton_reset_estado();
         estado_actual = ESTADO_CARGAR_RECETA;
+        printf("Init\n");
     } else {
         estado_actual = ESTADO_FINALIZADO;
     }
@@ -151,3 +168,4 @@ void blender_loop(uint trig_pin, uint echo_pin) {
             break;
     }
 }
+

@@ -9,7 +9,7 @@ static Receta recetas[] = {
     {
         .nombre = "Panquecas Esponjosas",
         .porcion = "1 persona",
-        .ingredientes = { "Harina de trigo", "Leche", "Huevo", "Azucar", "Polvo de hornear", "Mantequilla derretida", "Sal", "Vainilla" },
+        .ingredientes = {"Harina de trigo      ","Leche                ","Huevo                ","Azucar               ","Polvo de hornear     ","Mantequilla derretida","Sal                  ","Vainilla             "},
         .cantidades = { 60, 90, 25, 10, 3, 10, 0.5, 1 },
         .total_ingredientes = 8,
         .tiempo_batido = 10,
