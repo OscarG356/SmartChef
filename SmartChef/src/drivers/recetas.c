@@ -12,9 +12,9 @@ static Receta recetas[] = {
         .ingredientes = {"Harina de trigo      ","Leche                ","Huevo                ","Azucar               ","Polvo de hornear     ","Mantequilla derretida","Sal                  ","Vainilla             "},
         .cantidades = { 60, 90, 25, 10, 3, 10, 0.5, 1 },
         .total_ingredientes = 8,
-        .tiempo_batido = 10,
-        .tiempo_reposo = 5,
-        .pwm_batido = 65535*0.5f
+        .tiempo_batido = 1,
+        .tiempo_reposo = 1,
+        .pwm_batido = 65535*0.9f
     },
     {
         .nombre = "Arepa de Maiz",
@@ -22,8 +22,8 @@ static Receta recetas[] = {
         .ingredientes = { "Mezcla P.A.N.", "Agua", "Leche", "Aceite vegetal" },
         .cantidades = { 60, 120, 30, 2.5 },
         .total_ingredientes = 4,
-        .tiempo_batido = 5,
-        .tiempo_reposo = 3,
+        .tiempo_batido = 2,
+        .tiempo_reposo = 1,
         .pwm_batido = 65535*0.8f
     }
 };

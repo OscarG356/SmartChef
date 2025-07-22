@@ -45,6 +45,7 @@ add_executable(SmartChef
     src/drivers/recetas.c
     src/drivers/batido_control.c
     src/sensors/boton_reset.c
+    src/drivers/timer_rtc.c
     )
 
 pico_set_program_name(SmartChef "SmartChef")
@@ -70,6 +71,8 @@ target_link_libraries(SmartChef
     hardware_irq
     hardware_pwm
     hardware_i2c
+    hardware_rtc
+
 )
 
 # Add the standard include files to the build

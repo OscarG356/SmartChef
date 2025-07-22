@@ -9,6 +9,7 @@
 #include "pico/stdlib.h"
 #include "hardware/sync.h"
 #include "boton_reset.h"
+#include "timer_rtc.h"
 
 typedef enum {
     ESTADO_CARGAR_RECETA,
@@ -30,6 +31,11 @@ static void inicializar_led() {
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
     gpio_put(LED_PIN, true); // Enciende el LED
+}
+static void apagar_led() {
+    gpio_init(LED_PIN);
+    gpio_set_dir(LED_PIN, GPIO_OUT);
+    gpio_put(LED_PIN, false); // Apaga el LED
 }
 
 //*******************************************
@@ -77,60 +83,72 @@ static void estado_pesar_ingredientes() {
         while (leer_peso_gramos() < cantidad) {
             float peso_actual = leer_peso_gramos();
             float peso_diferencia = cantidad - (peso_final - peso_actual);
-
+            printf("1:%s:%.2fg:%.2f", nombre, cantidad, peso_diferencia);
             if (peso_diferencia < 5.0f) {
                 peso_final += peso_actual;
                 break;
             }
             sleep_ms(500);
-            printf("1:%s:%.2fg:%.2f", nombre, cantidad, peso_diferencia);
+            
         }
     }
     estado_actual = ESTADO_BATIDO;
+    apagar_led();
 }
 
 static void estado_batido(uint trig_pin, uint echo_pin) {
     absolute_time_t inicio_batido = get_absolute_time();
     iniciar_pwm_motor(receta_actual.pwm_batido);
-    printf(receta_actual.tiempo_batido);
+    timer_rtc_start(receta_actual.tiempo_batido);
 
     while (true) {
         verificar_tapa_y_mover_servos();
         if (tapa_cerrada) {
             iniciar_pwm_motor(receta_actual.pwm_batido);
-            int64_t tiempo_transcurrido = absolute_time_diff_us(inicio_batido, get_absolute_time());
 
-            if (tiempo_transcurrido < receta_actual.tiempo_batido * 1000000) {
+            if (!timer_rtc_expired()) {
                 float corriente = current_sensor_get_current();
                 float nivel = ultrasonic_get_distance_cm(trig_pin, echo_pin);
+                printf("2:%.2f:%.2f", corriente, -nivel);
             }
-            estado_actual = ESTADO_REPOSO;
+            else{
+                estado_actual = ESTADO_REPOSO;
+                detener_pwm_motor();
+                inicializar_led();
+                return;
+            }
          
         } else {
             detener_pwm_motor();
+            printf("2:Poner:Tapa");
             sleep_ms(1000);
-            return;
         }
+        sleep_ms(100);
     }
 }
 
 static void estado_reposo(uint trig_pin, uint echo_pin) {
     absolute_time_t inicio_reposo = get_absolute_time();
     absolute_time_t fin_reposo = delayed_by_ms(inicio_reposo, receta_actual.tiempo_reposo * 1000);
+    timer_rtc_start(receta_actual.tiempo_reposo);
 
-    printf(receta_actual.tiempo_reposo);
-
-    while (absolute_time_diff_us(get_absolute_time(), fin_reposo) > 0) {
+    while (!timer_rtc_expired()) {
         verificar_tapa_y_mover_servos();
+        printf("3:C");
         if (!tapa_cerrada) {
-            estado_actual = ESTADO_FINALIZADO;
-            break;
+            printf("3:A");
+            sleep_ms(1000);
         }
+        sleep_ms(1000);
     }
-    if (!tapa_cerrada) {
-        float nivel_final = ultrasonic_get_distance_cm(trig_pin, echo_pin);
-        estado_actual = ESTADO_FINALIZADO;
+    while(tapa_cerrada){
+        verificar_tapa_y_mover_servos();
+        sleep_ms(500);
     }
+    estado_actual = ESTADO_FINALIZADO;
+    printf("FIN");
+    apagar_led();
+
 }
 
 static void estado_finalizado() {

@@ -6,6 +6,7 @@
 #include "load_cell.h"
 #include "current_sensor.h"
 #include "boton_reset.h"
+#include "timer_rtc.h" 
 
 // Pines del sistema
 #define TRIG_PIN        19
@@ -35,7 +36,7 @@ int main() {
     
    hx711_init();
     boton_init(15); // Inicializar botón de reset en GPIO 15
-    
+    timer_rtc_init();
 
     // === Bucle principal ===
     while (true) {

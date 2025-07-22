@@ -52,12 +52,7 @@ long promedio(int muestras) {
 
 float leer_peso_gramos(void) {
     long lectura_cruda = promedio(10);
-    float peso = (((lectura_cruda - OFFSET_MANUAL) / FACTOR_ESCALA)-475);
-
-    if (peso < 0.0f) peso = 0.0f;
-    hx711_sleep();
-    sleep_ms(3000);  // Simula ciclo de bajo consumo
-    hx711_wake();
+    float peso = (((lectura_cruda - OFFSET_MANUAL) / FACTOR_ESCALA));
 
     return peso;
 }

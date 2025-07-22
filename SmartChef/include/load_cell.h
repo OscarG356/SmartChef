@@ -8,8 +8,8 @@
 #define HX711_SCK 3
 
 // Calibración
-#define OFFSET_MANUAL 455L
-#define FACTOR_ESCALA -199.026f
+#define OFFSET_MANUAL -40.31L
+#define FACTOR_ESCALA 2088.79f
 
 void hx711_init();
 long leer_hx711();
